@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/drewstinnett/vaultpp/cli/cmd"
+import "github.com/drewstinnett/vaultx/cli/cmd"
 
 func main() {
 	cmd.Execute()

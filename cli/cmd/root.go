@@ -37,8 +37,8 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "vault++",
-	Short: "vault++ is a CLI for interacting with Vault",
+	Use:   "vaultx",
+	Short: "vaultx is a CLI for interacting with Vault",
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {

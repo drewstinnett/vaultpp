@@ -1,0 +1,40 @@
+---
+builds:
+  - env:
+      - CGO_ENABLED=0
+    main: ./cli/
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    ldflags:
+      - '-s -w'
+      - -X github.com/drewstinnett/vaultx/cli/cmd.date={{ .CommitTimestamp }}
+      - -X github.com/drewstinnett/vaultx/cli/cmd.version={{ .Tag }}
+      - -X github.com/drewstinnett/vaultx/cli/cmd.commit={{ .ShortCommit }}
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: 'vaultx'
+archives:
+  - format: tar.gz
+    name_template: 'vaultx-{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    replacements:
+      darwin: macOS
+checksum:
+  name_template: 'vaultx-{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+snapshot:
+  name_template: "{{ .Tag }}-snapshot"
+brews:
+  - name: 'vaultx'
+    tap:
+      owner: drewstinnett
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    description: "Generate README from a template, with some handy GitLab data"
+    homepage: "https://github.com/drewstinnett/vaultx"
+    license: BSD-2-Clause

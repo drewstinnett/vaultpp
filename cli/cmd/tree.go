@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/drewstinnett/vaultpp/pkg/vaultpp"
+	"github.com/drewstinnett/vaultx/pkg/vaultx"
 	"github.com/spf13/cobra"
 )
 
@@ -36,8 +36,8 @@ var treeCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		showData, err := cmd.Flags().GetBool("data")
-		CheckErr(err, "")
-		vpp, err := vaultpp.NewVaultPP("", "")
+		CheckErr(err, "Issue checking for data arg")
+		vpp, err := vaultx.NewVaultPP("", "")
 		CheckErr(err, "")
 
 		var search string
