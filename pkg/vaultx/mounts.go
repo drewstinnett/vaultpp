@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/apex/log"
 )
 
 func (v *VaultPP) GetMountPaths() ([]string, error) {
@@ -55,13 +57,30 @@ func (v *VaultPP) GetKVMounts() ([]KVMountInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	ctx := log.WithFields(log.Fields{
+		"func": "GetKVMounts",
+	})
 	for mountPath, d := range info.Data {
 		mountType := d.(map[string]interface{})["type"].(string)
+		ctx.WithFields(log.Fields{
+			"type":      mountType,
+			"mountPath": mountPath,
+		}).Debugf("Examining mount")
 		if mountType != "kv" {
 			continue
 		}
+		log.Debugf("%v", d.(map[string]interface{}))
 		options := d.(map[string]interface{})["options"]
-		version := options.(map[string]interface{})["version"].(string)
+		ctx.WithFields(log.Fields{
+			"options": options,
+		}).Debugf("Mount Options")
+
+		var version string
+		if options != nil {
+			version = options.(map[string]interface{})["version"].(string)
+		} else {
+			version = "1"
+		}
 		versionI, err := strconv.Atoi(version)
 		if err != nil {
 			return nil, err
