@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Drew Stinnett <drew@drewlink.com>
+Copyright © 2022 Drew Stinnett <drew@drewlink.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,54 +22,43 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/apex/log"
 	"github.com/drewstinnett/vaultx/pkg/vaultx"
 	"github.com/spf13/cobra"
 )
 
-// treeCmd represents the tree command
-var treeCmd = &cobra.Command{
-	Use:   "tree PATH",
-	Short: "Show Tree of KV paths",
+// saveContextCmd represents the saveContext command
+var saveContextCmd = &cobra.Command{
+	Use:   "save NAME",
+	Short: "Save context to state file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		showData, err := cmd.Flags().GetBool("data")
-		CheckErr(err, "Issue checking for data arg")
-		ctx, err := vaultx.GetCurrentContext("")
-		CheckErr(err, "Could not get context")
-		vpp, err := vaultx.NewVaultPP(ctx)
-		CheckErr(err, "")
-
-		var search string
-		if !strings.HasSuffix(args[0], "/") {
-			search = args[0] + "/"
-		} else {
-			search = args[0]
+		targetName := args[0]
+		if targetName == "environment" {
+			log.Fatal("Invalid name. Cannot use 'environment' as a name.")
 		}
-		paths, err := vpp.WalkTree(search)
-		CheckErr(err, "")
-		for _, path := range paths {
-			if showData {
-				fmt.Println(path.DataPath)
-			} else {
-				fmt.Println(path.Path)
-			}
-		}
+		currentCtx, err := vaultx.GetCurrentContext(targetName)
+		CheckErr(err, "Could not figure out the current context. Make sure that is working before attempting to save")
+		log.Log.WithFields(log.Fields{
+			"name": targetName,
+		}).Info("Saving context to file")
+		// Rename here
+		currentCtx.Name = targetName
+		err = vaultx.SaveContext("", currentCtx)
+		CheckErr(err, "Could not save context")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(treeCmd)
+	contextCmd.AddCommand(saveContextCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// treeCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// saveContextCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	treeCmd.PersistentFlags().BoolP("data", "d", false, "Display /data/ paths instead of the plain path")
+	// saveContextCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
