@@ -43,7 +43,9 @@ func TestContextFreshen(t *testing.T) {
 			os.Setenv(k, v)
 		}
 		c, err := vaultx.NewContextWithEnv()
-		c.Freshen()
+		require.NoError(t, err)
+		err = c.Freshen()
+		require.NoError(t, err)
 
 		if tc.shouldErr {
 			require.Error(t, err)

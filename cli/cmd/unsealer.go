@@ -65,7 +65,8 @@ func init() {
 	// and all subcommands, e.g.:
 	// unsealerCmd.PersistentFlags().String("foo", "", "A help for foo")
 	unsealerCmd.PersistentFlags().StringP("method", "m", "", "Method to use for unsealing")
-	unsealerCmd.MarkPersistentFlagRequired("method")
+	err := unsealerCmd.MarkPersistentFlagRequired("method")
+	CheckErr(err, "")
 	// viper.BindPFlag("method", unsealerCmd.PersistentFlags().Lookup("method"))
 
 	// Cobra supports local flags which will only run when this command

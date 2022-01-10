@@ -27,6 +27,7 @@ import (
 
 	"github.com/drewstinnett/vaultx/pkg/vaultx"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 // treeCmd represents the tree command
@@ -37,6 +38,8 @@ var treeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		showData, err := cmd.Flags().GetBool("data")
 		CheckErr(err, "Issue checking for data arg")
+		includeSecretData, err := cmd.Flags().GetBool("include-secret-data")
+		CheckErr(err, "Issue checking for include-secret-data arg")
 		ctx, err := vaultx.GetCurrentContext("")
 		CheckErr(err, "Could not get context")
 		vpp, err := vaultx.NewVaultPP(ctx)
@@ -48,13 +51,19 @@ var treeCmd = &cobra.Command{
 		} else {
 			search = args[0]
 		}
-		paths, err := vpp.WalkTree(search)
+		paths, err := vpp.WalkTree(search, true)
 		CheckErr(err, "")
-		for _, path := range paths {
-			if showData {
-				fmt.Println(path.DataPath)
-			} else {
-				fmt.Println(path.Path)
+		if includeSecretData {
+			d, err := yaml.Marshal(paths)
+			CheckErr(err, "")
+			fmt.Println(string(d))
+		} else {
+			for _, path := range paths {
+				if showData {
+					fmt.Println(path.DataPath)
+				} else {
+					fmt.Println(path.Path)
+				}
 			}
 		}
 	},
@@ -72,4 +81,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	treeCmd.PersistentFlags().BoolP("data", "d", false, "Display /data/ paths instead of the plain path")
+	treeCmd.PersistentFlags().BoolP("include-secret-data", "i", false, "Include secret data in the output")
 }

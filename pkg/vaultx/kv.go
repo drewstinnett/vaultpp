@@ -22,7 +22,7 @@ type KVExportSecret struct {
 	Data     map[string]interface{} `yaml:"data"`
 }
 
-func (v *VaultPP) WalkTree(filePath string) ([]KVExportSecret, error) {
+func (v *VaultPP) WalkTree(filePath string, includeData bool) ([]KVExportSecret, error) {
 	mounts, err := v.GetKVMounts()
 	if err != nil {
 		return nil, err
@@ -31,14 +31,14 @@ func (v *VaultPP) WalkTree(filePath string) ([]KVExportSecret, error) {
 	if err != nil {
 		return nil, err
 	}
-	items, err := v.WalkTreeWithMount(m, strings.TrimPrefix(filePath, m.Path))
+	items, err := v.WalkTreeWithMount(m, strings.TrimPrefix(filePath, m.Path), includeData)
 	if err != nil {
 		return nil, err
 	}
 	return items, nil
 }
 
-func (v *VaultPP) WalkTreeWithMount(mount *KVMountInfo, path string) ([]KVExportSecret, error) {
+func (v *VaultPP) WalkTreeWithMount(mount *KVMountInfo, path string, includeData bool) ([]KVExportSecret, error) {
 	var items []KVExportSecret
 	keys, err := v.ListKeys(mount, path)
 	if err != nil {
@@ -48,17 +48,31 @@ func (v *VaultPP) WalkTreeWithMount(mount *KVMountInfo, path string) ([]KVExport
 
 	for _, k := range keys {
 		if strings.HasSuffix(k, "/") {
-			newItems, err := v.WalkTreeWithMount(mount, fmt.Sprintf("%s%s", path, k))
+			newItems, err := v.WalkTreeWithMount(mount, fmt.Sprintf("%s%s", path, k), includeData)
 			if err != nil {
 				return nil, err
 			}
 			items = append(items, newItems...)
 		} else {
 			// items = append(items, fmt.Sprintf("%s%s", path, k))
-			items = append(items, KVExportSecret{
+			item := KVExportSecret{
 				Path:     pathx.Join(mount.Path, path, k),
 				DataPath: pathx.Join(mount.Path, "data/", fmt.Sprintf("%s%s", path, k)),
-			})
+			}
+			if includeData {
+				var dpath string
+				if mount.Version > 1 {
+					dpath = item.DataPath
+				} else {
+					dpath = item.Path
+				}
+				d, err := v.Client.Logical().Read(dpath)
+				if err != nil {
+					return nil, err
+				}
+				item.Data = d.Data
+			}
+			items = append(items, item)
 		}
 	}
 	return items, nil
